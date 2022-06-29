@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cripto_currency/pages/details_page.dart';
 import 'package:cripto_currency/services/http_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -15,10 +16,13 @@ class _HomePageState extends State<HomePage> {
   double? _deviceHeight, _deviceWidth;
   HTTPService? _http;
 
+  String? cryptoCoin;
+
   @override
   void initState() {
     super.initState();
     _http = GetIt.instance.get<HTTPService>();
+    cryptoCoin = 'bitcoin';
   }
 
   @override
@@ -44,7 +48,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _selectedCoinDropDown() {
-    List<String> _coins = ['bitcoin'];
+    List<String> _coins = ['bitcoin', 'ethereum', 'tether', 'cardano'];
     List<DropdownMenuItem<String>> _items = _coins
         .map(
           (e) => DropdownMenuItem(
@@ -61,9 +65,13 @@ class _HomePageState extends State<HomePage> {
         )
         .toList();
     return DropdownButton(
-      value: _coins.first,
+      value: cryptoCoin,
       items: _items,
-      onChanged: (val) {},
+      onChanged: (val) {
+        setState((){
+          cryptoCoin = val as String?;
+        });
+      },
       dropdownColor: Color.fromRGBO(83, 88, 206, 1),
       iconSize: 30,
       icon: Icon(
@@ -76,7 +84,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _dataWidgets() {
     return FutureBuilder(
-      future: _http!.get('/coins/bitcoin'),
+      future: _http!.get('/coins/$cryptoCoin'),
       builder: (BuildContext _context, AsyncSnapshot snapshot) {
         if (snapshot.hasData) {
           Map data = jsonDecode(snapshot.data.toString());
@@ -88,7 +96,19 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _coinImage(data['image']['large']),
+              GestureDetector(
+                onDoubleTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_context) => DetailsPage(diffValue: data['market_data']['current_price']),
+                    ),
+                  );
+                },
+                child: _coinImage(
+                  data['image']['large'],
+                ),
+              ),
               _currentPriceWidget(_usdPrice),
               _percentageChangeWidget(_changePercent),
               _descriptionCardWidget(data['description']['en']),
