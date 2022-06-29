@@ -28,4 +28,4 @@ class DetailsPage extends StatelessWidget {
       ),
     );
   }
-
+}
